@@ -470,7 +470,8 @@ export default function App() {
   const [sectorScores, setSectorScores] = useState({});
   const [autoTrade,    setAutoTrade]    = useState(false);
   const [showStrategy, setShowStrategy] = useState(false);
-  const [tab,          setTab]          = useState('market');
+  const [role, setRole] = useState(null);
+  const [tab, setTab] = useState('market');
   const [selected,     setSelected]     = useState('AAPL');
   const [qty,          setQty]          = useState(1);
   const [symSearch,    setSymSearch]    = useState('');
