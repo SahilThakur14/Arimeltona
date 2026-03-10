@@ -1,8 +1,17 @@
 {
   "rewrites": [
     {
-      "source": "/api/yahoo/(.*)",
+      "source": "/api/yahoo/:path*",
       "destination": "/api/yahoo"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS" }
+      ]
     }
   ]
 }

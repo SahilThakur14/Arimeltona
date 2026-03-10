@@ -16,6 +16,7 @@ import Chart from './components/Chart.jsx';
 import BacktestPanel from './components/BacktestPanel.jsx';
 import NewsPanel, { EarningsBadge } from './components/NewsPanel.jsx';
 import { ToastContainer, toast } from './components/Toast.jsx';
+import LockScreen from './components/LockScreen.jsx';
 
 const STARTING_CASH = 10000;
 const fmt    = (n,d=2) => typeof n==='number' ? n.toFixed(d) : '—';
@@ -781,6 +782,7 @@ export default function App() {
   // ── Render ───────────────────────────────────────────────────────────
   return (
     <div style={{height:'100vh',background:'var(--bg)',display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      {!role && <LockScreen onAuth={setRole} />}
       <ToastContainer />
       {showStrategy && <StrategyModal onClose={()=>setShowStrategy(false)} />}
 
@@ -872,11 +874,31 @@ export default function App() {
               </span>
             </div>
             <button className={`bot-toggle ${autoTrade?'on':'off'}`}
-              onClick={()=>{if(!marketStatus.isOpen&&!autoTrade) return toast('Market closed — cannot enable bot','warn'); setAutoTrade(p=>!p);}}>
+              onClick={()=>{
+                if(role==='visitor') return toast('Visitor access — trading disabled','warn');
+                if(!marketStatus.isOpen&&!autoTrade) return toast('Market closed — cannot enable bot','warn');
+                setAutoTrade(p=>!p);
+              }}
+              title={role==='visitor'?'Trading disabled for visitors':undefined}
+              style={{opacity:role==='visitor'?.4:1,cursor:role==='visitor'?'not-allowed':'pointer'}}>
               <span className="bot-knob" />
             </button>
           </div>
 
+          {/* Role badge */}
+          {role && (
+            <div style={{padding:'0 10px',display:'flex',alignItems:'center',borderRight:'1px solid var(--border2)'}}>
+              <span style={{
+                fontSize:7,fontFamily:"'DM Mono',monospace",letterSpacing:'.12em',
+                padding:'3px 8px',borderRadius:3,fontWeight:700,
+                background: role==='admin' ? 'rgba(245,158,11,.08)' : 'rgba(77,135,246,.08)',
+                color: role==='admin' ? '#f59e0b' : '#4d87f6',
+                border: `1px solid ${role==='admin' ? 'rgba(245,158,11,.2)' : 'rgba(77,135,246,.2)'}`,
+              }}>
+                {role==='admin' ? '⚙ ADMIN' : '👁 VISITOR'}
+              </span>
+            </div>
+          )}
           {/* Portfolio value */}
           <div style={{display:'flex',flexDirection:'column',justifyContent:'center',
             padding:'0 14px',borderRight:'1px solid var(--border2)',gap:1}}>
@@ -920,8 +942,8 @@ export default function App() {
               onMouseLeave={e=>{e.currentTarget.style.background='rgba(245,158,11,.05)'}}>
               ⬇
             </button>
-            <button title="Reset portfolio"
-              onClick={()=>{if(confirm('Reset portfolio to $10,000?')) resetPortfolio();}}
+            <button title={role==='visitor'?'Admin only — cannot reset':'Reset portfolio'}
+              onClick={()=>{ if(role==='visitor') return toast('Visitor access — admin only','warn'); if(confirm('Reset portfolio to $10,000?')) resetPortfolio(); }}
               style={{background:'none',border:'1px solid var(--border2)',borderRadius:4,
                 padding:'5px 8px',color:'var(--text4)',fontSize:12,cursor:'pointer',
                 transition:'all .15s',lineHeight:1}}
@@ -1619,12 +1641,16 @@ export default function App() {
 
           {/* Buy / Sell buttons */}
           <div style={{padding:'10px 14px 0',display:'flex',gap:7}}>
-            <button className={`btn-buy ${!marketStatus.isOpen||!selPrice?'btn-disabled':''}`}
-              onClick={handleBuy} disabled={!marketStatus.isOpen||!selPrice}>
+            <button className={`btn-buy ${!marketStatus.isOpen||!selPrice||role==='visitor'?'btn-disabled':''}`}
+              onClick={()=>{ if(role==='visitor') return toast('Visitor access — trading disabled','warn'); handleBuy(); }}
+              disabled={!marketStatus.isOpen||!selPrice||role==='visitor'}
+              title={role==='visitor'?'Visitor access — trading disabled':undefined}>
               BUY
             </button>
-            <button className={`btn-sell ${!marketStatus.isOpen||!selPrice?'btn-disabled':''}`}
-              onClick={handleSell} disabled={!marketStatus.isOpen||!selPrice}>
+            <button className={`btn-sell ${!marketStatus.isOpen||!selPrice||role==='visitor'?'btn-disabled':''}`}
+              onClick={()=>{ if(role==='visitor') return toast('Visitor access — trading disabled','warn'); handleSell(); }}
+              disabled={!marketStatus.isOpen||!selPrice||role==='visitor'}
+              title={role==='visitor'?'Visitor access — trading disabled':undefined}>
               SELL
             </button>
           </div>
